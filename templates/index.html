@@ -1,0 +1,14 @@
+{% extends "base.html" %} 
+{% block content %}
+  <h1>Welcome to the CUCM provisioning page</h1> 
+  <h3>Please fill in the information below:</h3> 
+    <form action="/" method="post">
+      <span>Username: <input type="text" name="username" value="{{ request.form.username }}"></span>
+      <span>IP Phone: <input type="text" name="ip_phone" value="{{ request.form.ip_phone }}"></span>
+      <span>IP Phone type: <input type="text" name="ip_phone_type" value="{{ request.form.ip_phone_type }}"></span>
+      <input type="submit" value="Submit">
+    </form>
+
+  <p><em> Accepted IP phone types are 7942 and 7962. The IP Phone should start with 'SEP'.</em></p>
+    
+{% endblock %}

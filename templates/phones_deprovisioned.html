@@ -1,0 +1,9 @@
+{% extends "base.html" %} 
+{% block content %}
+  <h3>Phones that have been disassociated for {{ username }}:</h3>
+    {% for phone in associated_phones %}
+      <tr> 
+      <td> {{ phone }} <br></td>
+      </tr>  
+    {% endfor %}  
+{% endblock %}

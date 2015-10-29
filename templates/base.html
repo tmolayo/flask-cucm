@@ -1,0 +1,23 @@
+<!DOCTYPE html> 
+<html>
+  <head>
+    <link rel="stylesheet" 
+      href="{{ url_for('static', filename='css/main.css') }}">
+    <title>Welcome to the CUCM provisioning page</title>
+  </head> 
+  <body>
+    <div class="page"> 
+      {% for message in get_flashed_messages() %} 
+	    <div class="flash">{{ message }}</div>
+	    {% endfor %} 
+	    {% if error %}
+	       <p class="error"><strong>Error:</strong> {{ error }}</p> 
+	    {% endif %} 
+      <br>
+	    <!-- inheritance -->
+      {% block content %} 
+      {% endblock %}
+      <!-- end inheritance -->
+    </div> 
+  </body>
+</html>

@@ -1,0 +1,93 @@
+{% extends "base.html" %} 
+{% block content %}
+  <h1>Welcome to the CUCM provisioning page</h1> 
+  <div class="add-user">
+    <h3>Add a new user:</h3> 
+    <table>
+      <tr>
+        <form action="{{ url_for('new_task') }}" method="post">
+          <td>
+            <label>User Name:</label> 
+            <input name="username" type="text">
+          </td> 
+          <td>
+            <label>IP phone:</label>
+            <input name="ip_phone" type="text" width="120px"> 
+          </td>
+          <td>
+            <label>IP phone type:</label>
+            <select name="ip_phone_type" width="100px">
+              <option value="7942">7942</option> 
+              <option value="7962">7962</option>
+            </select> 
+          </td>
+          <td>
+            &nbsp;
+            &nbsp;
+            <input class="button" type="submit" value="Save">
+          </td>
+        </form>
+      </tr> 
+    </table>
+  </div>
+  <div class="entries">
+    <br>
+    <br>
+    <h2>Users to be added:</h2> 
+      <div class="datagrid">
+        <table> 
+          <thead>
+            <tr>
+              <th width="100px"><strong>Username</strong></th> 
+              <th width="100px"><strong>IP phone</strong></th> 
+              <th width="100px"><strong>IP phone type</strong></th> 
+              <th><strong>Actions</strong></th>
+            </tr>
+          </thead>
+          {% for task in open_tasks %}
+            <tr>
+              <td width="100px">{{ task.username }}</td> 
+              <td width="100px">{{ task.ip_phone }}</td> 
+              <td width="100px">{{ task.ip_phone_type }}</td> 
+              <td>
+                <a href="{{ url_for('complete', task_id = task.task_id) }}">Add phones for this user</a> --
+                <a href="{{ url_for('delete_entry', task_id = task.task_id) }}">Delete this user and his or her associated phones</a> --
+                <a href="{{ url_for('check_entry', task_id = task.task_id) }}">Check the extension and the current phone association</a>
+              </td> 
+            </tr>
+          {% endfor %} 
+        </table>
+      </div> 
+      <br> 
+      <br>
+    </div>
+    <div class="entries">
+      <h2>Users added:</h2> 
+        <div class="datagrid">
+        <table> 
+          <thead>
+            <tr>
+              <th width="100px"><strong>Username</strong></th> 
+              <th width="100px"><strong>IP phone</strong></th> 
+              <th width="100px"><strong>IP phone type</strong></th> 
+              <th><strong>Actions</strong></th>
+            </tr>
+          </thead>
+          {% for task in closed_tasks %}
+            <tr>
+              <td width="100px">{{ task.username }}</td> 
+              <td width="100px">{{ task.ip_phone }}</td> 
+              <td width="100px">{{ task.ip_phone_type }}</td> 
+              <td>
+                <a href="{{ url_for('delete_entry', task_id = task.task_id) }}">Delete this user and his or her associated phones</a> --
+                <a href="{{ url_for('check_entry', task_id = task.task_id) }}">Check the extension and the current phone association</a>
+              </td> 
+            </tr>
+          {% endfor %} 
+        </table>
+      </div> 
+      <br> 
+      <br>
+    </div>
+ 
+{% endblock %}
