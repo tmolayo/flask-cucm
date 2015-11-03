@@ -1,5 +1,9 @@
 {% extends "base.html" %} 
 {% block content %}
-  <h3>Associated phones for {{ username }}:</h3> 
-    <strong>Phone:</strong> {{ associated_phones }}<br/>   
+  <h3>Associated phones for {{ username }}:</h3>
+    {% for phone in associated_phones %}
+      <tr> 
+      <td> {{ phone }} <br></td>
+      </tr>  
+    {% endfor %}  
 {% endblock %}

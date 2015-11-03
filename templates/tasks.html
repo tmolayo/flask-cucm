@@ -1,11 +1,14 @@
 {% extends "base.html" %} 
 {% block content %}
   <h1>Welcome to the CUCM provisioning page</h1> 
+  <a href="/logout">Logout</a>
+  <a href="/db_reset">Delete records</a>
   <div class="add-user">
     <h3>Add a new user:</h3> 
     <table>
       <tr>
         <form action="{{ url_for('new_task') }}" method="post">
+          {{ form.csrf_token }}
           <td>
             <label>User Name:</label> 
             <input name="username" type="text">
@@ -50,8 +53,8 @@
               <td width="100px">{{ task.ip_phone }}</td> 
               <td width="100px">{{ task.ip_phone_type }}</td> 
               <td>
-                <a href="{{ url_for('complete', task_id = task.task_id) }}">Add phones for this user</a> --
-                <a href="{{ url_for('delete_entry', task_id = task.task_id) }}">Delete this user and his or her associated phones</a> --
+                <a href="{{ url_for('complete', task_id = task.task_id) }}">Add phones for this user</a> <br>
+                <a href="{{ url_for('delete_entry', task_id = task.task_id) }}">Delete this user and his or her associated phones</a> <br>
                 <a href="{{ url_for('check_entry', task_id = task.task_id) }}">Check the extension and the current phone association</a>
               </td> 
             </tr>
@@ -79,7 +82,7 @@
               <td width="100px">{{ task.ip_phone }}</td> 
               <td width="100px">{{ task.ip_phone_type }}</td> 
               <td>
-                <a href="{{ url_for('delete_entry', task_id = task.task_id) }}">Delete this user and his or her associated phones</a> --
+                <a href="{{ url_for('delete_entry', task_id = task.task_id) }}">Delete this user and his or her associated phones</a> <br>
                 <a href="{{ url_for('check_entry', task_id = task.task_id) }}">Check the extension and the current phone association</a>
               </td> 
             </tr>

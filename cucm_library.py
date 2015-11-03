@@ -51,6 +51,9 @@ def user_association(userid):
   
   #"Connecting to myphone.central1.com to add the line and phones for the user"
  
+  res = [] 
+  res1 = []
+
   location = 'https://172.20.133.71:8443/axl/'
   if platform.uname()[0] == 'Darwin':
     # OSX path
@@ -73,11 +76,40 @@ def user_association(userid):
 
   try:  
     result = client.service.getUser(userid=userid)
-    result = result[1]['return']['user']['associatedDevices']['device']
+    res.append('The phones associated with '+userid+':')
+    res.append(result[1]['return']['user']['associatedDevices']['device'])
   except:
-    result = ['There is probably no associated devices for '+userid+'. The error message is '+str(sys.exc_info()[0])]   
+    res.append('There is probably no associated devices for '+userid+'. The error message is '+str(sys.exc_info()[0]))   
   
-  return (", ".join(result))
+  result = sasl_connect(userid)
+
+  ldap_failed = 'False'
+  if not result:
+    res.append('This user '+userid+' has not been found in AD')
+    res.append('No phone has been associated or created')
+    ldap_failed = 'True'   
+  elif len(result[0][1]) != 4:
+    res.append('This user '+userid+' is missing some info in LDAP, probably his extension (ipPhone) is not set in AD')
+    res.append('No phone has been associated or created')
+    ldap_failed = 'True'
+
+ 
+  if ldap_failed == 'False':    
+    directory_number = ''.join(result[0][1]['ipPhone'])
+    try:
+      if directory_number.startswith("8"):
+        routePartitionName = 'PT_TOMS_DN'
+      else:
+        routePartitionName = 'PT_VACS_DN'  
+       
+      result = client.service.getLine(pattern=directory_number,routePartitionName=routePartitionName)
+      res1.append('The phones associated with '+directory_number+':')
+      res1.append(result[1]['return']['line']['associatedDevices']['device'])
+      res.extend(res1)
+    except:
+      res.append('There is probably no associated devices for '+directory_number+'. The error message is '+str(sys.exc_info()[0]))  
+  #return (", ".join(result))
+  return res
 
 
 def sasl_connect(username):
@@ -258,9 +290,10 @@ def user_deprovisioning(userid, ip_phone):
     res.append('Error message when looking for '+userid.upper()+' information: '+str(sys.exc_info()[1])+'\n')
     user_failed = 'True'
   
+
   # We remove the phones
-  res = removePhone(userid,ip_phone,client)  
-  
+  res1 = removePhone(userid,ip_phone,client)  
+  res.extend(res1)
   # Verification  
   # Getting a user detail
   if user_failed == 'False':
@@ -275,6 +308,8 @@ def user_deprovisioning(userid, ip_phone):
       
   #print 'Results were saved in cucm_user_deprovisioning_results.txt'
   return res
+
+
 
 def addLine(userid,full_name,directory_number,client):
 
