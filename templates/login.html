@@ -1,0 +1,13 @@
+{% extends "base.html" %} 
+{% block content %}
+  <h1>Welcome to the CUCM provisioning page</h1> 
+  <h3>Please login</h3> 
+    <form action="/" method="post">
+      <span>Username: <input type="text" name="username" value="{{ request.form.username }}"></span>
+      <span>Password: <input type="password" name="password" value="{{ request.form.password }}"></span>
+      <input type="submit" value="Login">
+    </form>
+
+  <p><em>Use the application credentials for the username and password.</em></p>
+    
+{% endblock %}
