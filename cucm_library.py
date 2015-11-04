@@ -35,10 +35,7 @@ def getAuthentication(system_type):
   auth = (username,password)
   return auth 
 
-def user_association(userid):
-  """Connects to CUCM, builds the config including 
-  lines, phones and user association
-  """ 
+def connect_AXL():
 
   # First we connect to the AXL API
   # Logging for debugging
@@ -50,10 +47,6 @@ def user_association(userid):
   #logging.getLogger('suds.wsdl').setLevel(logging.CRITICAL)
   
   #"Connecting to myphone.central1.com to add the line and phones for the user"
- 
-  res = [] 
-  res1 = []
-
   location = 'https://172.20.133.71:8443/axl/'
   if platform.uname()[0] == 'Darwin':
     # OSX path
@@ -70,9 +63,20 @@ def user_association(userid):
 
   # Bypassing SSL self-cert check
   ssl._create_default_https_context = ssl._create_unverified_context
-   
+
   # URL Detail
   client = Client(wsdl,location = location, transport = HttpAuthenticated(username = Username, password = Password),faults=False)
+
+  return client
+
+def user_association(userid):
+  """Connects to CUCM, builds the config including 
+  lines, phones and user association
+  """ 
+  client = connect_AXL()
+ 
+  res = [] 
+  res1 = []
 
   try:  
     result = client.service.getUser(userid=userid)
@@ -153,6 +157,8 @@ def sasl_connect(username):
   return result              
 
 
+
+
 def updateUser(userid,ip_phone):
   SOAP = '<SOAP-ENV:Envelope xmlns:ns0="http://www.cisco.com/AXL/API/10.5" xmlns:ns1="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">'
   SOAP += '<SOAP-ENV:Header/>'
@@ -174,39 +180,12 @@ def user_provisioning(userid, ip_phone, ip_phone_type):
   lines, phones and user association
   """ 
 
-  # First we connect to the AXL API
-  # Logging for debugging
-  logging.basicConfig(level=logging.INFO)
-  #logging.getLogger('suds.client').setLevel(logging.DEBUG)
-  logging.getLogger('suds.client').setLevel(logging.CRITICAL)
-  #logging.getLogger('suds.transport').setLevel(logging.DEBUG)
-  #logging.getLogger('suds.xsd.schema').setLevel(logging.CRITICAL)
-  #logging.getLogger('suds.wsdl').setLevel(logging.CRITICAL)
+  client = connect_AXL()
+  
   res = [] 
   res1 = []
   res2 = []
-  # "Connecting to myphone.central1.com to add the line and phones for the user"
- 
-  location = 'https://172.20.133.71:8443/axl/'
-  if platform.uname()[0] == 'Darwin':
-    # OSX path
-    wsdl = 'file:///Users/fbobes/Documents/Python/CUCM/AXLAPI.wsdl'
-  elif platform.uname()[0] == 'Linux':
-    # Linux path
-    wsdl = 'file:///home/fbobes/cucm/AXLAPI.wsdl'
-  else: 
-    # Some other OS
-    wsdl = 'file:///home/fbobes/cucm/AXLAPI.wsdl'
-  auth = getAuthentication("axl")  
-  Username = auth[0]
-  Password = auth[1]
-
-  # Bypassing SSL self-cert check
-  ssl._create_default_https_context = ssl._create_unverified_context
-   
-  # URL Detail
-  client = Client(wsdl,location = location, transport = HttpAuthenticated(username = Username, password = Password),faults=False)
-
+  
   # First we want to check that the user is in AD and that he is an extension
   result = sasl_connect(userid)
 
@@ -238,7 +217,8 @@ def user_provisioning(userid, ip_phone, ip_phone_type):
     res.extend(res2)
     #We finally associate the user with his phones
     #result = client.service.updateUser(__inject={'msg':updateUser(userid,ip_phone)})
-    #print result
+    #result = updateAUser(userid,ip_phone,client)
+    
     #if result[0] == 200:
     #  print 'All the phones were associated with user: '+userid
     #elif result[0] == 500:
@@ -247,45 +227,24 @@ def user_provisioning(userid, ip_phone, ip_phone_type):
   return res
 
 def user_deprovisioning(userid, ip_phone):
+  """Connects to CUCM, removes the phones for a user
+  but not the extension since it can be shared
+  """ 
 
-  # First we connect to the AXL API
-  # Logging for debugging
-  logging.basicConfig(level=logging.INFO)
-  #logging.getLogger('suds.client').setLevel(logging.DEBUG)
-  logging.getLogger('suds.client').setLevel(logging.CRITICAL)
-  #logging.getLogger('suds.transport').setLevel(logging.DEBUG)
-  #logging.getLogger('suds.xsd.schema').setLevel(logging.CRITICAL)
-  #logging.getLogger('suds.wsdl').setLevel(logging.CRITICAL)
+  client = connect_AXL()
 
   res = [] 
   res1 = []
   res2 = []
  
-  location = 'https://172.20.133.71:8443/axl/'
-  if platform.uname()[0] == 'Darwin':
-    # OSX path
-    wsdl = 'file:///Users/fbobes/Documents/Python/CUCM/AXLAPI.wsdl'
-  elif platform.uname()[0] == 'Linux':
-    # Linux path
-    wsdl = 'file:///home/fbobes/cucm/AXLAPI.wsdl'
-  else: 
-    # Some other OS
-    wsdl = 'file:///home/fbobes/cucm/AXLAPI.wsdl'
-  auth = getAuthentication("axl")  
-  Username = auth[0]
-  Password = auth[1]
-
   
-  # Bypassing SSL self-cert check
-  ssl._create_default_https_context = ssl._create_unverified_context
-
-  # URL Detail
-  client = Client(wsdl,location = location, transport = HttpAuthenticated(username = Username, password = Password))
-
   # First we check that the user exists 
   user_failed = 'False'
   try:
     result = client.service.getUser(userid=userid)
+    if result[0] == 500:
+      user_failed = 'True'
+      res.append('Error message when looking for '+userid.upper()+' information.')
   except:
     res.append('Error message when looking for '+userid.upper()+' information: '+str(sys.exc_info()[1])+'\n')
     user_failed = 'True'
@@ -301,7 +260,7 @@ def user_deprovisioning(userid, ip_phone):
       result = client.service.getUser(userid=userid)
     except:
       res.append('Error message when looking for '+userid.upper()+' information: '+str(sys.exc_info()[1])+'\n')
-    if result['return']['user']['associatedDevices'] == "":
+    if result[1]['return']['user']['associatedDevices'] == "":
       res.append('The devices associated with '+userid+' have been removed')
     else:
       res.append('The phones have not been removed succesfuly for',userid)  
@@ -337,6 +296,21 @@ def addLine(userid,full_name,directory_number,client):
 
   return res  
    
+def updateAUser(userid,ip_phone,client):
+
+  res =[]
+  result = client.service.updateUser({
+    'uuid':'4AF0471F-4752-47FA-B3CD-FD025732FF02'
+    })
+
+  if result[0] == 200:
+    print 'All the phones were associated with user: '+userid
+    res.append('All the phones were associated with user: '+userid)
+  elif result[0] == 500:
+    print 'Error message when associating the phones for '+userid+': '+result[1].faultstring
+    res.append('Error message when associating the phones for '+userid+': '+result[1].faultstring)
+  
+  return res
   
 def addPhone(userid,full_name,directory_number,ip_phone,ip_phone_type,e164mask,client):
 
@@ -524,35 +498,50 @@ def removePhone(userid,ip_phone,client):
   try:
   # First we remove the physical phone
     result = client.service.removePhone(name=ip_phone)
-    res.append('The phone '+ip_phone+' has been removed')
+    if result[0] == 200:
+      res.append('The phone '+ip_phone+' has been removed')
+    elif result[0] == 500: 
+      res.append('There is probably no '+ip_phone+' device.') 
   except:
-    res.append('There is probably no '+ip_phone+' device. The error message is '+str(sys.exc_info()[1]))     
+    res.append('There was an issue removing '+ip_phone+'. The error message is '+str(sys.exc_info()[1]))     
   
   # Then we remove the other phones
   try:
     result = client.service.removePhone(name='CSF'+userid.upper())
-    res.append('The phone CSF'+userid.upper()+' has been removed')
+    if result[0] == 200:
+      res.append('The phone CSF'+userid.upper()+' has been removed')
+    elif result[0] == 500:
+      res.append('There is probably no CSF'+userid.upper()+' device.')
   except:
-    res.append('There is probably no CSF'+userid.upper()+' device. The error message is '+str(sys.exc_info()[1]))      
+    res.append('There was an issue removing CSF'+userid.upper()+'. The error message is '+str(sys.exc_info()[1]))       
 
   try:
     result = client.service.removePhone(name='BOT'+userid.upper())
-    res.append('The phone BOT'+userid.upper()+' has been removed')
+    if result[0] == 200:
+      res.append('The phone BOT'+userid.upper()+' has been removed')
+    elif result[0] == 500:
+      res.append('There is probably no BOT'+userid.upper()+' device.')   
   except:
-    res.append('There is probably no BOT'+userid.upper()+' device. The error message is '+str(sys.exc_info()[1]))      
-  
+    res.append('There was an issue removing BOT'+userid.upper()+'. The error message is '+str(sys.exc_info()[1]))
+
   try:
     result = client.service.removePhone(name='TAB'+userid.upper())
-    res.append('The phone TAB'+userid.upper()+' has been removed')
+    if result[0] == 200:
+      res.append('The phone TAB'+userid.upper()+' has been removed')
+    elif result[0] == 500:
+      res.append('There is probably no TAB'+userid.upper()+' device.') 
   except:
-    res.append('There is probably no TAB'+userid.upper()+' device. The error message is '+str(sys.exc_info()[1]))      
- 
+    res.append('There was an issue removing TAB'+userid.upper()+'. The error message is '+str(sys.exc_info()[1]))
+
   try:
     result = client.service.removePhone(name='TCT'+userid.upper())
-    res.append('The phone TCR'+userid.upper()+' has been removed')
+    if result[0] == 200:
+      res.append('The phone TCT'+userid.upper()+' has been removed')
+    elif result[0] == 500:
+      res.append('There is probably no TCT'+userid.upper()+' device.')
   except:
-    res.append('There is probably no TCT'+userid.upper()+' device. The error message is '+str(sys.exc_info()[1]))      
-  
+    res.append('There was an issue removing TCT'+userid.upper()+'. The error message is '+str(sys.exc_info()[1]))
+
   return res
 
 

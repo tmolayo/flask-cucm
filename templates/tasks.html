@@ -2,7 +2,7 @@
 {% block content %}
   <h1>Welcome to the CUCM provisioning page</h1> 
   <a href="/logout">Logout</a>
-  <a href="/db_reset">Delete records</a>
+  <a href="/db_reset">Delete Query</a>
   <div class="add-user">
     <h3>Add a new user:</h3> 
     <table>
@@ -14,7 +14,7 @@
             <input name="username" type="text">
           </td> 
           <td>
-            <label>IP phone:</label>
+            <label>Device Name:</label>
             <input name="ip_phone" type="text" width="120px"> 
           </td>
           <td>
@@ -27,7 +27,7 @@
           <td>
             &nbsp;
             &nbsp;
-            <input class="button" type="submit" value="Save">
+            <input class="button" type="submit" value="Query">
           </td>
         </form>
       </tr> 
@@ -36,7 +36,7 @@
   <div class="entries">
     <br>
     <br>
-    <h2>Users to be added:</h2> 
+    <h2>Query Result:</h2> 
       <div class="datagrid">
         <table> 
           <thead>
@@ -71,7 +71,7 @@
           <thead>
             <tr>
               <th width="100px"><strong>Username</strong></th> 
-              <th width="100px"><strong>IP phone</strong></th> 
+              <th width="100px"><strong>Device Name</strong></th> 
               <th width="100px"><strong>IP phone type</strong></th> 
               <th><strong>Actions</strong></th>
             </tr>
